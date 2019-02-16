@@ -8,6 +8,7 @@ services:
     ports:
       - "33060:3306"
     restart: always
+    container_name: ifridge-mysql.pri
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
@@ -15,7 +16,9 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
 
   nginx:
+    #TODO:add version
     image: nginx:alpine
+    container_name: ifridge-nginx.pri
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/conf:/etc/nginx/conf.d
@@ -26,16 +29,16 @@ services:
       - web
 
   redis:
+    container_name: ifridge-redis.pri
     image: redis:alpine
     ports:
       - "6379:6379"
     restart: always
 
   web:
+    container_name: ifridge-web.pri
     build:
     # command: python manage.py runserver 0:8000
-    # ports:
-    #   - "8000:8000"
       context: ./web
       dockerfile: Dockerfile
     restart: always
@@ -48,3 +51,23 @@ services:
     depends_on:
       - mysql
       - redis
+
+  iot:
+    container_name: ifridge-iot.pri
+    build:
+      context: ./iot
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - /app/node_modules
+      - ./iot:/app
+
+  # tests:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.dev
+  #   volumes:
+  #     - /app/node_modules
+  #     - .:/app
+  #   command: ["yarn", "test"]
